@@ -45,20 +45,18 @@ function _retrieveJsonData(retrieveDataCallback) {
     var conData = JSON.parse(tableau.connectionData);
     var jsonString = conData.jsonString;
     if (conData.jsonUrl) {
-      var successCallback = function(data) 
-      {
-        window.cachedTableData = _jsToTable(data);
-        retrieveDataCallback(window.cachedTableData);
-      };
-      // Go get the json data
-      // This is the first, and most basic, of many attempts to get the data.
-      // We make different attempts that use different approaches, because if
-      // the server we are requesting data from has not enabled CORS, then the
-      // request will fail. In that case we try different proxies to try to get
-      // around the same origin policy. This is not as clean as it could be, but 
-      // for a general purpose connector, we want to make every attempt we can
-      // to pull in the data
-      _basicAjaxRequest1(conData.jsonUrl, successCallback);
+      var conUrl = _buildConnectionUrl(conData.jsonUrl);
+      // handle the json data from the remote source.     
+      var xhr = $.ajax({
+        url: conUrl,
+  crossDomain: true,
+        dataType: 'jsonp',
+        success: function(data)
+        {
+          window.cachedTableData = _jsToTable(data);
+          retrieveDataCallback(window.cachedTableData);
+        }
+      });
       return;
     }
     try {
@@ -71,7 +69,6 @@ function _retrieveJsonData(retrieveDataCallback) {
   }
   retrieveDataCallback(window.cachedTableData);
 }
-
 // There are a lot of ways to handle URLS. Sometimes we'll need workarounds for CORS. These
 // methods chain together a series of attempts to get the data at the given url
 
